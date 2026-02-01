@@ -60,4 +60,50 @@ const register = async(req,res) =>{
     }
 };
 
-module.exports = {register};
+
+const login = async(req,res) =>{
+    try {
+        const {username, password} = req.body;
+
+        //Todo: Kontrol(faik)
+        if(!username || !password) 
+            return res.status(400).json({error:'Tüm alanlar zorunludur.'});
+
+        //Todo: Kullanıcıyı bul (faik)
+        const user = await prisma.user.findUnique({
+            where:{username:username}
+        });
+
+        if(!user)
+            return res.status(400).json({error:'Geçersiz kullanıcı adı veya şifre.'});
+
+        //Todo: Şifre kontorlü
+        const validPassword = await bcrypt.compare(password,user.password);
+        if(!validPassword)
+            return res.status(400).json({error:'Geçersiz kullanıcı adı veya şifre'});
+
+        //Todo:JWT token oluştur(faik)
+        const token = jwt.sign(
+            {userId: user.id, username:user.username},
+            process.env.JWT_SECRET || 'your-secret-key',
+            {expiresIn:'7d'}
+        );
+        res.status(200).json({
+            message:'Giriş başarılı',
+            token,
+            user:{
+                id:user.id,
+                username:user.username,
+                email:user.email
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({error:'Sunucu hatası'});
+    }
+};
+
+
+
+module.exports = {register,login};
