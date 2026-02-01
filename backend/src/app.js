@@ -5,10 +5,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+
 
 app.use(cors());
 app.use(express.json());
+//Todo: Auth route'ları
 app.use('/api/auth',authRoutes);
+//Todo: Kullanıcı profili route'ları
+app.use('/api/users',userRoutes);
 
 app.get('/', (req,res) =>{
     res.send('Instagram backend apı ile çalışıyor');
