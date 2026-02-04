@@ -6,7 +6,7 @@ const getProfile = async(req,res) =>{
     try {
         const {username} = req.params;
 
-        // Paralel sorgular: Kullanıcı bilgisi + Post sayısı + Like sayısı
+        // Todo: Paralel sorgular: Kullanıcı bilgisi + Post sayısı + Like sayısı
         const [user, postCount, likeCount] = await Promise.all([
             prisma.user.findUnique({
                 where: { username: username },

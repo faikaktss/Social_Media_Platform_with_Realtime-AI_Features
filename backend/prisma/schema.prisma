@@ -20,6 +20,7 @@ model User{
 
     posts Post[]
     likes Like[]
+    comments Comment[]
 
     @@index([username])  //Todo: Optimize username lookups
 }
@@ -37,6 +38,7 @@ model Post{
     userId Int
     user User @relation(fields: [userId], references: [id])
     likes Like[]
+    comments Comment[]
 
     @@index([userId]) //Todo: Bir kullanıcının tüm postları
     @@index([createdAt]) //Todo: Zamana göre sıralama
@@ -58,4 +60,25 @@ model Like{
     @@unique([userId,postId]) //Todo: Aynı kullanıcının aynı postu birden fazla beğenmesini engeller
     @@index([postId]) //Todo: Bir postun tüm like'ları
     @@index([userId]) //Todo: Bir kullanıcının beğendiği postlar
+}
+
+model Comment{
+    id Int @id @default(autoincrement())
+    content String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    //Todo: İlişkiler
+    userId Int
+    user User @relation(fields: [userId],references: [id])
+
+
+    postId Int
+    post Post @relation(fields: [postId], references: [id])
+
+
+    //Todo: Optimize Edilmiş Sorgular için indexler
+    @@index([postId])
+    @@index([userId])
+    @@index([createdAt])
 }

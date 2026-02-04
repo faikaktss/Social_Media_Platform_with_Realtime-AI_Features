@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
 const likeRoutes = require('./routes/likeRoutes');
+const commentRoutes = require('./routes/CommentRoutes');
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +20,8 @@ app.use('/api/users',userRoutes);
 app.use('/api/posts',postRoutes);
 //Todo: Beğeni route'ları
 app.use('/api/likes',likeRoutes);
+//Todo: Comment route'ları
+app.use('/api/comments', commentRoutes);
 
 app.get('/', (req,res) =>{
     res.send('Instagram backend apı ile çalışıyor');

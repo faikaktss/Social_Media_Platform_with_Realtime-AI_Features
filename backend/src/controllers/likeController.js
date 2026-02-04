@@ -14,11 +14,11 @@ const toggleLike = async(req,res) =>{
             return res.status(404).json({message:'Post bulunamadı.'});
 
         //Todo: Kullanıcı bu postu daha önce beğendi mi Kontrol et
-        const existingLike = await prisma.like.findFirst({
+        const existingLike = await prisma.like.findUnique({
             where:{
                 userId_postId: {
-                    userId:userId,
-                    postId:parseInt(postId)
+                    userId: userId,
+                    postId: parseInt(postId)
                 }
             }
         });
