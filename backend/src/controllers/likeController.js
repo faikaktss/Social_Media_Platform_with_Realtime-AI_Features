@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const toggleLike = async(req,res) =>{
     try {
         const {postId} = req.body;
-        const {userId} = req.user.userId; //Todo: Giriş yapmış kullanıcının id'sini alıyoruz
+        const {userId} = req.user; //Todo: Giriş yapmış kullanıcının id'sini alıyoruz
 
         const post = await prisma.post.findUnique({
             where:{id:parseInt(postId)}
@@ -58,3 +58,9 @@ const toggleLike = async(req,res) =>{
 
 
 module.exports = {toggleLike};
+
+
+
+
+
+

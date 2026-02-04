@@ -1,6 +1,6 @@
-datasource db {
+datasource db{
     provider = "postgresql"
-    url      = env("DATABASE_URL")
+    url = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,22 +8,24 @@ generator client {
 }
 
 
-//Todo: Kullanıcı kısmı
+//Todo: User model optimization
 model User{
     id  Int @id @default(autoincrement())
     username String @unique
     email String @unique
     password String
     profilePic String?
-    bio  String?
+    bio String?
     createdAt DateTime @default(now())
 
     posts Post[]
     likes Like[]
+
+    @@index([username])  //Todo: Optimize username lookups
 }
 
-//Todo: Post kısmı
 
+//Todo: Post model optimization
 model Post{
     id Int @id @default(autoincrement())
     caption String?
@@ -35,20 +37,25 @@ model Post{
     userId Int
     user User @relation(fields: [userId], references: [id])
     likes Like[]
+
+    @@index([userId]) //Todo: Bir kullanıcının tüm postları
+    @@index([createdAt]) //Todo: Zamana göre sıralama
 }
 
 
+//Todo: Like model optimization
 model Like{
     id Int @id @default(autoincrement())
     createdAt DateTime @default(now())
 
-    //Todo : İlişkiler
+    //Todo: İlişkiler
     userId Int
-    user User @relation(fields: [userId],references: [id])
-    
-    
+    user User @relation(fields: [userId], references: [id])
+
     postId Int
     post Post @relation(fields: [postId], references: [id])
 
-    @@unique([userId, postId])
+    @@unique([userId,postId]) //Todo: Aynı kullanıcının aynı postu birden fazla beğenmesini engeller
+    @@index([postId]) //Todo: Bir postun tüm like'ları
+    @@index([userId]) //Todo: Bir kullanıcının beğendiği postlar
 }
