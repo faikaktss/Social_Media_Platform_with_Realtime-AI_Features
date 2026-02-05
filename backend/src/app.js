@@ -1,6 +1,7 @@
 const express = require('express');
-const cors = require('cors') // Başka bir originden gelen istekleri kabul etmek için CORS middleware'i kullanıyoruz
-
+const cors = require('cors') 
+const globalErrorHandler = require('./middlewares/errorHandler');
+const AppError = require('./utils/AppError');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -27,6 +28,12 @@ app.get('/', (req,res) =>{
     res.send('Instagram backend apı ile çalışıyor');
 })
 
+// 404 handler - tüm tanımlanmamış route'lar için
+app.use((req, res, next) => {
+    next(new AppError(`${req.originalUrl} yolu bulunamadı`, 404));
+});
+
+app.use(globalErrorHandler);
 app.listen(PORT,() =>{
     console.log(`Server is running on port ${PORT}`);
 })
