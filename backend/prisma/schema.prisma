@@ -16,11 +16,15 @@ model User{
     password String
     profilePic String?
     bio String?
+    followerCount Int @default(0) //Todo: Takipçi sayısı
+    followingCount Int @default(0) //Todo: Takip edilen sayısı
     createdAt DateTime @default(now())
 
     posts Post[]
     likes Like[]
     comments Comment[]
+    followers Follow[] @relation("UserFollowers") //Todo: Takipçi ilişkisi
+    following Follow[] @relation("UserFollowing") //Todo: Takip edilen ilişkisi
 
     @@index([username])  //Todo: Optimize username lookups
 }
@@ -81,4 +85,23 @@ model Comment{
     @@index([postId])
     @@index([userId])
     @@index([createdAt])
+}
+
+
+//Todo:Takip - Sistemi
+model Follow{
+    id Int @id @default(autoincrement())
+    createdAt DateTime @default(now())
+
+    //Todo:Takip eden kullanıcı
+    followerId Int
+    follower User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+
+    //Todo: Takip edilen kullanıcı 
+    followingId Int
+    following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+    @@unique([followerId,followingId]) //Todo: Aynı kullanıcının aynı kişiyi birden fazla takip etmesini engeller
+    @@index([followerId]) //Todo: Bir kullanıcının takip ettiği kişiler
+    @@index([followingId]) //Todo: Bir kullanıcının takipçileri
 }
