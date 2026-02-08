@@ -1,5 +1,6 @@
 const express = require('express');
-const cors = require('cors') 
+const cors = require('cors');
+const path = require('path');
 const globalErrorHandler = require('./middlewares/errorHandler');
 const AppError = require('./utils/AppError');
 const app = express();
@@ -13,6 +14,10 @@ const commentRoutes = require('./routes/CommentRoutes');
 
 app.use(cors());
 app.use(express.json());
+
+
+//Todo: Yüklenen resimleri public yapmak istiyoruz
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 //Todo: Auth route'ları
 app.use('/api/auth',authRoutes);
 //Todo: Kullanıcı profili route'ları
@@ -28,7 +33,7 @@ app.get('/', (req,res) =>{
     res.send('Instagram backend apı ile çalışıyor');
 })
 
-// 404 handler - tüm tanımlanmamış route'lar için
+//Todo:Tüm routler için oluşturulmuş bir 404 handler
 app.use((req, res, next) => {
     next(new AppError(`${req.originalUrl} yolu bulunamadı`, 404));
 });

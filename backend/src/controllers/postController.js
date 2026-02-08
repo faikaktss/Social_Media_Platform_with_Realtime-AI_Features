@@ -4,26 +4,28 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const prisma = new PrismaClient();
 
-const createPost = asyncHandler(async (req, res, next) => {
-    const {caption, imageUrl} = req.body;
-    const { userId } = req.user;
-    
-    if (!imageUrl) {
-        return next(new AppError('Görsel URL si gerekli', 400));
-    }
+const createPost = asyncHandler(async(req,res,next) =>{
+    const {caption} = req.body;
+    const {userId} = req.user;
+
+    //Todo:dosyayı body'den almıyorum çünkü multer ile işlemi yapıp req.file içine atıyorum
+    if(!req.file)
+        return next(new AppError('Lütfen bir resim dosyası yükleyin',404));
+
+    //Todo: Resim url'sini oluşturuyorum
+    const imageUrl = `/uploads/${req.file.filename}`;
 
     const newPost = await prisma.post.create({
-        data: {
+        data:{
             caption,
             imageUrl,
-            userId: userId
+            userId:userId
         }
     });
 
     res.status(201).json({
-        success: true,
-        message: 'Post başarıyla oluşturuldu',
-        post: newPost
+        success:true,
+        data:newPost
     });
 });
 

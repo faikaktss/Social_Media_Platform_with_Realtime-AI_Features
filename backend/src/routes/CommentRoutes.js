@@ -1,5 +1,5 @@
 const express = require('express');
-const {createComment, getCommnentsByPost , deleteComment} = require('../controllers/commentController');
+const {createComment, getCommentsByPost , deleteComment} = require('../controllers/commentController');
 const authenticateToken = require('../middlewares/authMiddleware');
 const {commentLimiter} = require('../middlewares/rateLimiter');
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/', commentLimiter, authenticateToken, createComment);
 
 //Todo: Bir postun yorumlarını getirme
-router.get('/post/:postId', getCommnentsByPost );
+router.get('/post/:postId', getCommentsByPost );
 
 //Todo: Yorum silme
 router.delete('/:commentId', authenticateToken, deleteComment);
