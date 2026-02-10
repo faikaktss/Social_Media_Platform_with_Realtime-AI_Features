@@ -1,110 +1,61 @@
-const { PrismaClient } = require('@prisma/client');
+const commentService = require('../services/commentService');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 
-const prisma = new PrismaClient();
-
-//Todo: Yorum ekleme
 const createComment = asyncHandler(async (req, res, next) => {
-    const {postId, content} = req.body;
-    const {userId} = req.user;
-    
-    if (!content || content.trim().length === 0) {
-        return next(new AppError('Yorum içeriği boş olamaz', 400));
-    }
-
-    const post = await prisma.post.findUnique({where: {id: parseInt(postId)}});
-    if (!post) {
-        return next(new AppError('Post bulunamadı', 404));
-    }
-
-    const newComment = await prisma.comment.create({
-        data: {
-            content: content.trim(),
-            userId: userId,
-            postId: parseInt(postId)
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    username: true,
-                    profilePic: true
-                }
-            }
-        }
-    });
-
-    res.status(201).json({
-        success: true,
-        message: 'Yorum eklendi',
-        comment: newComment
-    });
+    const { postId, content } = req.body;
+    const { userId } = req.user;
+    if (!content || !postId) return next(new AppError('Yorum veya postId eksik', 400));
+    const comment = await commentService.createComment({ postId: parseInt(postId), content, userId });
+    res.status(201).json({ success: true, data: comment });
 });
 
-//Todo: Postun yorumlarını getirme
+const deleteComment = asyncHandler(async (req, res, next) => {
+    const { commentId } = req.params;
+    const { userId } = req.user;
+    const deleted = await commentService.deleteComment(parseInt(commentId), userId);
+    if (!deleted) return next(new AppError('Yorum silme yetkiniz yok veya yorum bulunamadı', 403));
+    res.status(200).json({ success: true, message: 'Yorum silindi' });
+});
+
 const getCommentsByPost = asyncHandler(async (req, res, next) => {
-    const {postId} = req.params;
+    const { postId } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
-    const skip = (page - 1) * limit;
-
-    const [comments, totalComments] = await Promise.all([
-        prisma.comment.findMany({
-            where: {postId: parseInt(postId)},
-            skip: skip,
-            take: limit,
-            orderBy: {createdAt: 'desc'},
-            select: {
-                id: true,
-                content: true,
-                createdAt: true,
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        profilePic: true
-                    }
-                }
-            }
-        }),
-        prisma.comment.count({where: {postId: parseInt(postId)}})
-    ]);
-
-    res.status(200).json({
-        success: true,
-        data: comments,
-        pagination: {
-            currentPage: page,
-            totalPages: Math.ceil(totalComments / limit),
-            totalComments,
-            hasMore: page * limit < totalComments,
-            limit
-        }
-    });
+    const comments = await commentService.getCommentsByPost(parseInt(postId), page, limit);
+    res.status(200).json({ success: true, data: comments });
 });
 
-//Todo: Yorum silme
-const deleteComment = asyncHandler(async (req, res, next) => {
-    const {commentId} = req.params;
-    const {userId} = req.user;
-
-    const comment = await prisma.comment.findUnique({where: {id: parseInt(commentId)}});
-
-    if (!comment) {
-        return next(new AppError('Yorum bulunamadı', 404));
-    }
-
-    if (comment.userId !== userId) {
-        return next(new AppError('Bu yorumu silme yetkiniz yok', 403));
-    }
-
-    await prisma.comment.delete({where: {id: parseInt(commentId)}});
-
-    res.status(200).json({
-        success: true,
-        message: 'Yorum silindi'
-    });
+const getCommentsByUser = asyncHandler(async (req, res, next) => {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const comments = await commentService.getCommentsByUser(parseInt(userId), page, limit);
+    res.status(200).json({ success: true, data: comments });
 });
 
-module.exports = {createComment, getCommentsByPost, deleteComment};
+const updateComment = asyncHandler(async (req, res, next) => {
+    const { commentId } = req.params;
+    const { userId } = req.user;
+    const { content } = req.body;
+    if (!content) return next(new AppError('Yorum içeriği boş olamaz', 400));
+    const updated = await commentService.updateComment(parseInt(commentId), userId, content);
+    if (!updated) return next(new AppError('Yorum güncelleme yetkiniz yok veya yorum bulunamadı', 403));
+    res.status(200).json({ success: true, data: updated });
+});
+
+const getCommentById = asyncHandler(async (req, res, next) => {
+    const { commentId } = req.params;
+    const comment = await commentService.getCommentById(parseInt(commentId));
+    if (!comment) return next(new AppError('Yorum bulunamadı', 404));
+    res.status(200).json({ success: true, data: comment });
+});
+
+module.exports = {
+    createComment,
+    deleteComment,
+    getCommentsByPost,
+    getCommentsByUser,
+    updateComment,
+    getCommentById
+};

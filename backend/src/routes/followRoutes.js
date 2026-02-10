@@ -4,7 +4,7 @@ const {
   getFollowers,
   getFollowing,
   checkFollowStatus
-} = require('../controllers/followerController');
+} = require('../controllers/followController');
 const authenticateToken = require('../middlewares/authMiddleware');
 
 const router = express.Router();
