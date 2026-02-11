@@ -19,7 +19,7 @@ const authenticateToken = (req,res,next) =>{
         next();
     } catch (error) {
         console.error('Token doğrulama hatası: ', error);
-        return res.status(403).json({message: 'Geçersiz token nedeniyle erişim reddedildi.'});
+        return res.status(401).json({message: 'Geçersiz token nedeniyle erişim reddedildi.'});
     }
 }
 

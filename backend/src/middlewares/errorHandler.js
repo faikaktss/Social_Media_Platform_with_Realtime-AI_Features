@@ -41,7 +41,7 @@ const globalErrorHandler = (err,req,res,next) =>{
     if(process.env.NODE_ENV === 'development'){
         sendErrorDev(err,res);
     }else{
-        let.error({...err});
+            const error = {...err};
         error.message = err.message;
 
         if(err.code === 'P2002')

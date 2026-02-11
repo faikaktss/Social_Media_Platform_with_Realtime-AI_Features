@@ -1,33 +1,116 @@
-const {PrismaClient} = require('@prisma/client');
+const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function getHomeFeed(userId,page = 1, limit = 10, sortBy ='newest'){
-    const following = await prisma.follow.findMany({
-        where:{followerId:userId},
-        select:{followingId:true}
-    });
-    const followingIds = following.map(f =>f.followingId);
-    followingIds.push(userId); //Todo: Kendi gönderilerini de dahil etmek için kullanıcı ID'sini ekle
-
-    const skip = (page - 1)*limit;
-    const orderBy = sortBy === 'popular'
-        ? [{likesCount:'desc'} , {createdAt:'desc'}]
-        : {createdAt:'desc'};
-
-    const [posts,totalPosts] = await Promise.all([
-        prisma.post.findMany({
-            where:{userId:{in:followingIds}},
-            skip,
-            take:limit,
-            orderBy,
-            include:{
-                user:{select:{id:true , username:true, profilePic:true}},
-                _count: {select:{comments:true}}
-            }
-        }),
-        prisma.post.count({where: {userId:{in:followingIds}}})
-    ]);
-    return {posts,totalPosts};
+function calculateTimeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    const intervals = {
+        yıl: 31536000,
+        ay: 2592000,
+        hafta: 604800,
+        gün: 86400,
+        saat: 3600,
+        dakika: 60
+    };
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / secondsInUnit);
+        if (interval >= 1) return `${interval} ${unit} önce`;
+    }
+    return 'Az önce';
 }
 
-module.exports = {getHomeFeed};
+async function getHomeFeed(currentUserId, page = 1, limit = 10, filterUserId, sortBy = 'newest') {
+    const skip = (page - 1) * limit;
+
+    // Takip edilen kullanıcılar
+    const following = await prisma.follow.findMany({
+        where: { followerId: currentUserId },
+        select: { followingId: true }
+    });
+    const followingIds = following.map(f => f.followingId);
+    followingIds.push(currentUserId);
+
+    // Kimseyi takip etmiyorsa ve postu yoksa
+    if (followingIds.length === 1 && followingIds[0] === currentUserId) {
+        const hasPosts = await prisma.post.count({ where: { userId: currentUserId } });
+        if (hasPosts === 0) {
+            return {
+                posts: [],
+                totalPosts: 0,
+                emptyFeed: true
+            };
+        }
+    }
+
+    const whereCondition = filterUserId
+        ? { userId: parseInt(filterUserId) }
+        : { userId: { in: followingIds } };
+
+    const orderBy = sortBy === 'popular'
+        ? [{ likesCount: 'desc' }, { createdAt: 'desc' }]
+        : [{ createdAt: 'desc' }];
+
+    const [posts, totalPosts] = await Promise.all([
+        prisma.post.findMany({
+            where: whereCondition,
+            skip,
+            take: limit,
+            orderBy,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        profilePic: true,
+                        followerCount: true
+                    }
+                },
+                _count: { select: { comments: true } }
+            }
+        }),
+        prisma.post.count({ where: whereCondition })
+    ]);
+
+    // Her post için ek bilgiler
+    const postsWithDetails = await Promise.all(
+        posts.map(async (post) => {
+            const isLiked = await prisma.like.findUnique({
+                where: {
+                    userId_postId: {
+                        userId: currentUserId,
+                        postId: post.id
+                    }
+                }
+            });
+            const isFollowingOwner = post.userId === currentUserId
+                ? null
+                : following.some(f => f.followingId === post.userId);
+
+            return {
+                id: post.id,
+                caption: post.caption,
+                imageUrl: post.imageUrl,
+                likesCount: post.likesCount,
+                commentsCount: post._count.comments,
+                createdAt: post.createdAt,
+                timeAgo: calculateTimeAgo(post.createdAt),
+                user: {
+                    id: post.user.id,
+                    username: post.user.username,
+                    profilePic: post.user.profilePic,
+                    followerCount: post.user.followerCount
+                },
+                isLikedByCurrentUser: !!isLiked,
+                isFollowingOwner: isFollowingOwner,
+                isOwnPost: post.userId === currentUserId
+            };
+        })
+    );
+
+    return {
+        posts: postsWithDetails,
+        totalPosts,
+        emptyFeed: false
+    };
+}
+
+module.exports = { getHomeFeed };
