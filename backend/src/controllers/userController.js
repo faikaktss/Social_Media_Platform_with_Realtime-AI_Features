@@ -1,3 +1,4 @@
+const e = require('express');
 const userService = require('../services/userService');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
@@ -10,6 +11,19 @@ const getProfile = asyncHandler(async (req, res, next) => {
 });
 
 const updateProfile = asyncHandler(async (req, res, next) => {
+    const errors = [];
+    const { email } = req.body;
+    if (email === undefined || String(email).trim() === '') {
+        errors.push('Email zorunlu ve boş olamaz');
+    }
+
+    if (errors.length > 0) {
+        return res.status(400).json({
+            message: 'Eksik veya hatalı alanlar var',
+            errors
+        });
+    }
+
     const { userId } = req.user;
     const updated = await userService.updateProfile(userId, req.body);
     res.json({ user: updated });
