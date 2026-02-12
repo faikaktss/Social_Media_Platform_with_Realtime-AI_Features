@@ -101,5 +101,90 @@ describe('Post Endpoints',() =>{
     expect(res.body).toHaveProperty('success', true);
     expect(res.body.data).toHaveProperty('id', postId);
     expect(res.body.data).toHaveProperty('caption', 'Test post for testing');
-});
+    });
+
+    it('should update post with valid token and owner', async() => {
+    const res = await request(app)
+        .put(`/api/posts/${postId}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ caption: 'Updated caption' });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('success', true);
+    expect(res.body.data).toHaveProperty('caption', 'Updated caption');
+    });
+
+    it('should return 403 when trying to update someone elses post', async() => {
+
+    const timestamp2 = Date.now();
+    await request(app)
+        .post('/api/auth/register')
+        .send({
+            username: `user${timestamp2}`,
+            email: `mail${timestamp2}@example.com`,
+            password: 'Testpass1'
+        });
+
+    const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({
+            username: `user${timestamp2}`,
+            password: 'Testpass1'
+        });
+    const otherUserToken = loginRes.body.token;
+
+    const res = await request(app)
+        .put(`/api/posts/${postId}`)
+        .set('Authorization', `Bearer ${otherUserToken}`)
+        .send({ caption: 'Trying to hack' });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('message');
+    });
+
+    it('should delete post with valid token and owner', async() => {
+    const res = await request(app)
+        .delete(`/api/posts/${postId}`)
+        .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('success', true);
+    expect(res.body).toHaveProperty('message');
+    });
+
+    it('should return 403 when trying to delete someone elses post', async() => {
+
+    const imagePath = path.join(__dirname, 'fixtures', 'test-image.png');
+    const newPostRes = await request(app)
+        .post('/api/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .field('caption', 'Another test post')
+        .attach('image', imagePath);
+    
+    const newPostId = newPostRes.body.data.id;
+
+    const timestamp2 = Date.now();
+    await request(app)
+        .post('/api/auth/register')
+        .send({
+            username: `user${timestamp2}`,
+            email: `mail${timestamp2}@example.com`,
+            password: 'Testpass1'
+        });
+
+    const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({
+            username: `user${timestamp2}`,
+            password: 'Testpass1'
+        });
+    const otherUserToken = loginRes.body.token;
+
+    const res = await request(app)
+        .delete(`/api/posts/${newPostId}`)
+        .set('Authorization', `Bearer ${otherUserToken}`);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.body).toHaveProperty('message');
+    });
 });
