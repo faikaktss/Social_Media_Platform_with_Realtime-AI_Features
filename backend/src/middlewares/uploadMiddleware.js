@@ -1,5 +1,5 @@
 const upload  =require('../config/multer');
-const {proccessImage} = require('../utils/imageProcessor');
+const {processImage} = require('../utils/imageProcessor');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { patch } = require('../routes/likeRoutes');
@@ -16,7 +16,7 @@ const uploadSingleImage = (fieldName) =>{
             if(!req.file)
                 return next(new AppError('Lütfen bir resim dosyası yükleyin',404))
             
-            const optimizedFileName = await proccessImage(req.file.path);
+            const optimizedFileName = await processImage(req.file.path);
 
             req.file.fileName = optimizedFileName;
             req.file.path = `uploads/${optimizedFileName}`;

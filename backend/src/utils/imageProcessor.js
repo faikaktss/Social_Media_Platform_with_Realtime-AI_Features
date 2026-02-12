@@ -21,6 +21,8 @@ const processImage = async(filePath, maxwidth = 1920,maxHeight=1920,quality=80) 
       .jpeg({quality})
       .toFile(outputPath)
       .catch(async(error) =>{
+        console.error('Sharp işleme hatası:', error.message);
+        console.error('Dosya yolu:', filePath);
         await fs.unlink(filePath).catch(() =>{});
         throw new AppError('Görsel işlenirken hata oluştu',500);
       });
