@@ -9,6 +9,6 @@ const router = express.Router();
 
 router.post('/',postLimiter,authenticateToken,...uploadSingleImage('image'),createPost);
 
-router.get('/',getAllPosts);
+router.get('/',authenticateToken,getAllPosts);
 
 module.exports = router;
