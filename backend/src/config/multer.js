@@ -9,7 +9,7 @@ const AppError = require('../utils/AppError');
 //Todo: multer Disk storage yapılandırması
 const storage = multer.diskStorage({
     destination:(req,file,cb)=>{
-        cb(null,'uploads/'); //Todo: Bu klasöre kaydedilecek
+        cb(null, path.join(__dirname, '../../uploads/')); //Todo: Bu klasöre kaydedilecek
     },
 
     //Todo: Benzersiz bir isim olur

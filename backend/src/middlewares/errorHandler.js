@@ -22,7 +22,7 @@ const sendErrorProd = (err,res) =>{
         });
     }
     else{
-        console.error('ERROR ', error);
+        console.error('ERROR ', err);
 
         res.status(500).json({
             success:false,
@@ -38,7 +38,7 @@ const globalErrorHandler = (err,req,res,next) =>{
     err.status = err.status || 'error';
 
     //Todo: Geliştirme ortamında mı yoksa canlıda mı
-    if(process.env.NODE_ENV === 'development'){
+    if(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'){
         sendErrorDev(err,res);
     }else{
             const error = {...err};

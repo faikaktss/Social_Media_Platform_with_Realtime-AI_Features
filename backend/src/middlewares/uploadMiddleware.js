@@ -18,7 +18,7 @@ const uploadSingleImage = (fieldName) =>{
             
             const optimizedFileName = await processImage(req.file.path);
 
-            req.file.fileName = optimizedFileName;
+            req.file.filename = optimizedFileName;
             req.file.path = `uploads/${optimizedFileName}`;
 
             next();

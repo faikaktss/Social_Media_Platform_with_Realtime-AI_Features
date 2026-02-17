@@ -14,4 +14,4 @@ if (!fs.existsSync(dir)) {
 }
 
 fs.writeFileSync(path.join(dir, 'test-image.png'), minimalPNG);
-console.log('✅ Test resmi oluşturuldu: tests/fixtures/test-image.png');
+console.log(' Test resmi oluşturuldu: tests/fixtures/test-image.png');

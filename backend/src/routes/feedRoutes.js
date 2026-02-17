@@ -6,4 +6,4 @@ const router = express.Router();
 
 router.get('/home',authenticateToken,getHomeFeed);
 
-module.exports = router;
+module.exports = router;    
