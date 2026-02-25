@@ -1,0 +1,15 @@
+# GitHub language statistics
+*.html linguist-vendored
+*.css linguist-vendored
+*.js linguist-detectable=true
+*.jsx linguist-detectable=true
+*.ts linguist-detectable=true
+*.tsx linguist-detectable=true
+
+# Documentation
+*.md linguist-documentation
+
+# Generated files
+package-lock.json linguist-generated
+yarn.lock linguist-generated
+prisma/migrations/* linguist-generated
