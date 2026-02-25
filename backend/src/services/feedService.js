@@ -1,3 +1,6 @@
+const followRepository = require('../repositories/FollowRepository');
+const postRepository = require('../repositories/PostRepository');
+const likeRepository = require('../repositories/LikeRepository');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -22,16 +25,12 @@ async function getHomeFeed(currentUserId, page = 1, limit = 10, filterUserId, so
     const skip = (page - 1) * limit;
 
     // Takip edilen kullanıcılar
-    const following = await prisma.follow.findMany({
-        where: { followerId: currentUserId },
-        select: { followingId: true }
-    });
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = await followRepository.getFollowingUserIds(currentUserId);
     followingIds.push(currentUserId);
 
     // Kimseyi takip etmiyorsa ve postu yoksa
     if (followingIds.length === 1 && followingIds[0] === currentUserId) {
-        const hasPosts = await prisma.post.count({ where: { userId: currentUserId } });
+        const hasPosts = await postRepository.count({ userId: currentUserId });
         if (hasPosts === 0) {
             return {
                 posts: [],
@@ -50,7 +49,7 @@ async function getHomeFeed(currentUserId, page = 1, limit = 10, filterUserId, so
         : [{ createdAt: 'desc' }];
 
     const [posts, totalPosts] = await Promise.all([
-        prisma.post.findMany({
+        postRepository.findAll({
             where: whereCondition,
             skip,
             take: limit,
@@ -67,23 +66,16 @@ async function getHomeFeed(currentUserId, page = 1, limit = 10, filterUserId, so
                 _count: { select: { comments: true } }
             }
         }),
-        prisma.post.count({ where: whereCondition })
+        postRepository.count(whereCondition)
     ]);
 
     // Her post için ek bilgiler
     const postsWithDetails = await Promise.all(
         posts.map(async (post) => {
-            const isLiked = await prisma.like.findUnique({
-                where: {
-                    userId_postId: {
-                        userId: currentUserId,
-                        postId: post.id
-                    }
-                }
-            });
+            const isLiked = await likeRepository.findByUserAndPost(currentUserId, post.id);
             const isFollowingOwner = post.userId === currentUserId
                 ? null
-                : following.some(f => f.followingId === post.userId);
+                : followingIds.includes(post.userId);
 
             return {
                 id: post.id,

@@ -1,57 +1,19 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const userRepository = require('../repositories/UserRepository');
 
 async function getUserById(id) {
-    return await prisma.user.findUnique({
-        where: { id },
-        select: {
-            id: true,
-            username: true,
-            email: true,
-            profilePic: true,
-            bio: true,
-            followerCount: true,
-            followingCount: true,
-            createdAt: true
-        }
-    });
+    return await userRepository.findByIdWithProfile(id);
 }
 
 async function getUserByUsername(username) {
-    return await prisma.user.findUnique({
-        where: { username },
-        select: {
-            id: true,
-            username: true,
-            email: true,
-            profilePic: true,
-            bio: true,
-            followerCount: true,
-            followingCount: true,
-            createdAt: true
-        }
-    });
+    return await userRepository.findByUsername(username, true);
 }
 
 async function updateProfile(userId, data) {
-    return await prisma.user.update({
-        where: { id: userId },
-        data,
-        select: {
-            id: true,
-            username: true,
-            email: true,
-            profilePic: true,
-            bio: true,
-            followerCount: true,
-            followingCount: true,
-            createdAt: true
-        }
-    });
+    return await userRepository.updateProfile(userId, data);
 }
 
 async function searchUsers(query, limit = 10) {
-    return await prisma.user.findMany({
+    return await userRepository.findAll({
         where: {
             username: {
                 contains: query,
@@ -70,7 +32,7 @@ async function searchUsers(query, limit = 10) {
 
 async function getUsers(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    return await prisma.user.findMany({
+    return await userRepository.findAll({
         skip,
         take: limit,
         select: {
@@ -83,7 +45,7 @@ async function getUsers(page = 1, limit = 20) {
 }
 
 async function deleteUser(id) {
-    return await prisma.user.delete({ where: { id } });
+    return await userRepository.delete(id);
 }
 
 module.exports = {

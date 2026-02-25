@@ -1,17 +1,13 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const userRepository = require('../repositories/UserRepository');
 
 async function findExistingUser(username, email) {
-    return await prisma.user.findFirst({
-        where: {
-            OR: [
-                { username },
-                { email }
-            ]
-        }
-    });
+    const userByUsername = await userRepository.findByUsername(username, false);
+    if (userByUsername) return userByUsername;
+    
+    const userByEmail = await userRepository.findByEmail(email);
+    return userByEmail;
 }
 
 async function hashPassword(password) {
@@ -19,12 +15,10 @@ async function hashPassword(password) {
 }
 
 async function createUser(username, email, hashedPassword) {
-    return await prisma.user.create({
-        data: {
-            username,
-            email,
-            password: hashedPassword
-        }
+    return await userRepository.create({
+        username,
+        email,
+        password: hashedPassword
     });
 }
 
@@ -37,9 +31,7 @@ function generateToken(user) {
 }
 
 async function findUserByUsername(username) {
-    return await prisma.user.findUnique({
-        where: { username }
-    });
+    return await userRepository.findByUsername(username, false);
 }
 
 async function comparePassword(password, hashedPassword) {
@@ -47,13 +39,11 @@ async function comparePassword(password, hashedPassword) {
 }
 
 async function findUserByEmail(email) {
-    return await prisma.user.findUnique({
-        where: { email }
-    });
+    return await userRepository.findByEmail(email);
 }
 
 async function searchUsers(query, limit = 10) {
-    return await prisma.user.findMany({
+    return await userRepository.findAll({
         where: {
             username: {
                 contains: query,

@@ -1,15 +1,10 @@
+const followRepository = require('../repositories/FollowRepository');
+const userRepository = require('../repositories/UserRepository');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function toggleFollow(currentUserId, targetUserId) {
-    const existingFollow = await prisma.follow.findUnique({
-        where: {
-            followerId_followingId: {
-                followerId: currentUserId,
-                followingId: targetUserId
-            }
-        }
-    });
+    const existingFollow = await followRepository.findByFollowerAndFollowing(currentUserId, targetUserId);
     if (existingFollow) {
         await prisma.$transaction([
             prisma.follow.delete({ where: { id: existingFollow.id } }),
@@ -43,7 +38,7 @@ async function toggleFollow(currentUserId, targetUserId) {
 
 async function getFollowers(userId, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    return await prisma.follow.findMany({
+    return await followRepository.findAll({
         where: { followingId: userId },
         skip,
         take: limit,
@@ -66,7 +61,7 @@ async function getFollowers(userId, page = 1, limit = 20) {
 
 async function getFollowing(userId, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    return await prisma.follow.findMany({
+    return await followRepository.findAll({
         where: { followerId: userId },
         skip,
         take: limit,
@@ -89,14 +84,7 @@ async function getFollowing(userId, page = 1, limit = 20) {
 
 async function checkFollowStatus(currentUserId, targetUserId) {
     if (currentUserId === targetUserId) return { isFollowing: false, isSelf: true };
-    const follow = await prisma.follow.findUnique({
-        where: {
-            followerId_followingId: {
-                followerId: currentUserId,
-                followingId: targetUserId
-            }
-        }
-    });
+    const follow = await followRepository.findByFollowerAndFollowing(currentUserId, targetUserId);
     return { isFollowing: !!follow, isSelf: false };
 }
 
