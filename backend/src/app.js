@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const globalErrorHandler = require('./middlewares/errorHandler');
 const AppError = require('./utils/AppError');
 const app = express();
@@ -17,6 +19,9 @@ const feedRoutes = require('./routes/feedRoutes');
 
 app.use(cors());
 app.use(express.json());
+
+//Todo: Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 //Todo: Yüklenen resimleri public yapmak istiyoruz
