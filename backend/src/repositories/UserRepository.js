@@ -19,7 +19,6 @@ class UserRepository extends BaseRepository {
             });
         }
         
-        // For profile viewing - exclude password
         return await this.prisma.user.findUnique({
             where: { username },
             select: {
