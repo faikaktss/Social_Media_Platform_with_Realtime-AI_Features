@@ -83,6 +83,8 @@ app.get('/', (req,res) =>{
     res.send('Instagram backend apı ile çalışıyor');
 })
 
+//Todo:  CI/CD test: bu satır otomatik testlerin çalışıp çalışmadığını doğrulamak için eklendi
+
 //Todo:Tüm routler için oluşturulmuş bir 404 handler
 app.use((req, res, next) => {
     next(new AppError(`${req.originalUrl} yolu bulunamadı`, 404));
