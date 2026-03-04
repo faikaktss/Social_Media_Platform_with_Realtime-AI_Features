@@ -1,0 +1,59 @@
+name: Testleri Çalıştır
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+
+#Todo: Bu kısımda sanal bir makine kurar github da veritabanına bağlanmak için sağlıklı bir şekilde
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Kodu çek
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Bağımlılıkları yükle
+        run: npm install
+
+      - name: Veritabanı tablolarını oluştur
+        run: npx prisma migrate deploy --schema=backend/prisma/schema.prisma
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+
+      - name: Prisma Client üret
+        run: npx prisma generate --schema=backend/prisma/schema.prisma
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+
+      - name: Testleri çalıştır
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          JWT_SECRET: test-jwt-secret-for-ci
+          NODE_ENV: test
