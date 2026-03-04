@@ -41,6 +41,9 @@ jobs:
       - name: Bağımlılıkları yükle
         run: npm install
 
+      - name: Uploads klasörünü oluştur
+        run: mkdir -p backend/uploads
+
       - name: Veritabanı tablolarını oluştur
         run: npx prisma migrate deploy --schema=backend/prisma/schema.prisma
         env:
